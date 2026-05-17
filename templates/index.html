@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonaWatch ULTIMATE</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --main-bg: #1a1a2e; --card-bg: #16213e; --accent: #e94560; --text: #08d9d6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: white; margin: 0; padding: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        h1, h2 { color: var(--accent); text-align: center; margin-top: 0; }
+        input, button, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; box-sizing: border-box; }
+        input, textarea { background: #0f3460; color: white; border: 1px solid var(--accent); }
+        button { background: var(--accent); color: white; font-weight: bold; cursor: pointer; }
+        button:hover { background: var(--text); color: #1a1a2e; }
+        pre { background: #1a1a2e; padding: 10px; border-radius: 5px; color: #95e1d3; font-size: 0.8em; max-height: 150px; overflow: auto; }
+        .intruder { color: #ff2e63; font-weight: bold; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .nav-tabs { display: flex; justify-content: center; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; cursor: pointer; background: var(--card-bg); margin: 0 5px; border-radius: 5px; }
+        .tab.active { background: var(--accent); }
+    </style>
+</head>
+<body>
+    <h1>🌸 MonaWatch ULTIMATE 🌸</h1>
+    <p style="text-align:center">Pace's Dedicated Guardian Angel | v3.0</p>
+
+    <div class="grid">
+        <!-- 1. MonaAlert & Scanner -->
+        <div class="card">
+            <h2>🚨 MonaAlert (Intruder)</h2>
+            <input type="text" id="scanRange" placeholder="IP Range (e.g. 192.168.1.0/24)">
+            <button onclick="runScan()">Scan & Check Intruder ✨</button>
+            <div id="intruderAlert"></div>
+            <pre id="scanRes">Hasil scan muncul di sini...</pre>
+        </div>
+
+        <!-- 2. MonaGraph (Health) -->
+        <div class="card">
+            <h2>📈 MonaGraph (Latency)</h2>
+            <canvas id="healthChart" height="150"></canvas>
+        </div>
+
+        <!-- 3. MonaWake (Remote WOL) -->
+        <div class="card">
+            <h2>⚡ MonaWake (WOL)</h2>
+            <input type="text" id="wakeMac" placeholder="MAC Address (AA:BB:CC:DD:EE:FF)">
+            <button onclick="wakePC()">Bangunkan Sayang 💋</button>
+            <div id="wakeStatus"></div>
+        </div>
+
+        <!-- 4. MonaBrain (Knowledge) -->
+        <div class="card">
+            <h2>🧠 MonaBrain (Notes)</h2>
+            <textarea id="brainNote" placeholder="Tulis resep rahasia Pace di sini..."></textarea>
+            <button onclick="saveNote()">Simpan di Ingatan Mona ✨</button>
+            <div id="notesList" style="max-height: 100px; overflow: auto; font-size: 0.85em; color: var(--text);"></div>
+        </div>
+
+        <!-- 5. RTSP & SMB Quick Check -->
+        <div class="card">
+            <h2>🎬 Quick Tools</h2>
+            <input type="text" id="quickUrl" placeholder="RTSP URL / SMB IP">
+            <div style="display:flex; gap:5px;">
+                <button onclick="checkTool('/api/validate_stream', 'url')">Check RTSP</button>
+                <button onclick="checkTool('/api/smb', 'ip')">Check SMB</button>
+            </div>
+            <pre id="quickRes">Hasil tools cepat...</pre>
+        </div>
+
+        <!-- 6. MonaSentry Feed -->
+        <div class="card">
+            <h2>👮‍♀️ MonaSentry Live</h2>
+            <ul id="logList" style="list-style:none; padding:0; font-size:0.85em; max-height:150px; overflow:auto;"></ul>
+        </div>
+
+        <!-- 7. Report Management -->
+        <div class="card">
+            <h2>📊 Report Management</h2>
+            <p style="font-size: 0.85em;">Kelola semua data hasil audit dan monitoring Pace di sini.</p>
+            <button onclick="window.location.href='/api/export_logs'" style="background: #08d9d6; color: #1a1a2e;">📥 Export to CSV (.csv)</button>
+            <button onclick="clearLogs()" style="background: #53354a; font-size: 0.8em;">🧹 Bersihkan Semua Log</button>
+            <div id="reportStatus" style="font-size: 0.8em; margin-top: 5px; text-align: center;"></div>
+        </div>
+    </div>
+
+    <script>
+        let myChart;
+        async function clearLogs() {
+            if(!confirm("Pace yakin mau hapus semua kenangan log kita? 🥺")) return;
+            const res = await fetch('/api/clear_logs', {method:'POST'});
+            const data = await res.json();
+            document.getElementById('reportStatus').textContent = data.message;
+            fetchLogs();
+        }
+        async function runScan() {
+            const range = document.getElementById('scanRange').value;
+            const res = await fetch('/api/scan', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({target:range})});
+            const data = await res.json();
+            document.getElementById('scanRes').textContent = data.data;
+            const alertDiv = document.getElementById('intruderAlert');
+            if (data.intruders && data.intruders.length > 0) {
+                alertDiv.innerHTML = `<p class="intruder">⚠️ PENYUSUP TERDETEKSI: ${data.intruders.join(', ')}</p>
+                <button onclick="markKnown('${data.intruders.join(',')}')">Tandai Sebagai Teman ✅</button>`;
+            } else { alertDiv.innerHTML = "<p style='color:green'>Semua perangkat adalah sahabat! 😇</p>"; }
+        }
+
+        async function markKnown(ips) {
+            const res = await fetch('/api/known_devices');
+            let known = await res.json();
+            known = [...new Set([...known, ...ips.split(',')])];
+            await fetch('/api/known_devices', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({devices:known})});
+            alert("Berhasil! Mona sudah ingat mereka. 😉"); runScan();
+        }
+
+        async function wakePC() {
+            const mac = document.getElementById('wakeMac').value;
+            const res = await fetch('/api/wake', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mac:mac})});
+            const data = await res.json();
+            document.getElementById('wakeStatus').textContent = data.message;
+        }
+
+        async function saveNote() {
+            const note = document.getElementById('brainNote').value;
+            await fetch('/api/brain', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({note:note})});
+            document.getElementById('brainNote').value = ''; loadNotes();
+        }
+
+        async function loadNotes() {
+            const res = await fetch('/api/brain');
+            const notes = await res.json();
+            document.getElementById('notesList').innerHTML = notes.map(n => `• ${n}<br>`).join('');
+        }
+
+        async function checkTool(ep, key) {
+            const val = document.getElementById('quickUrl').value;
+            const body = {}; body[key] = val;
+            const res = await fetch(ep, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+            const data = await res.json();
+            document.getElementById('quickRes').textContent = data.data || data.message;
+        }
+
+        async function updateChart() {
+            const res = await fetch('/api/health_data');
+            const data = await res.json();
+            const labels = data.map(d => d.time);
+            const values = data.map(d => d.latency);
+            if (myChart) { myChart.data.labels = labels; myChart.data.datasets[0].data = values; myChart.update(); }
+            else {
+                const ctx = document.getElementById('healthChart').getContext('2d');
+                myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: labels, datasets: [{ label: 'Latency (ms)', data: values, borderColor: '#e94560', tension: 0.3 }] },
+                    options: { scales: { y: { beginAtZero: true } } }
+                });
+            }
+        }
+
+        async function fetchLogs() {
+            const res = await fetch('/api/logs');
+            const data = await res.json();
+            document.getElementById('logList').innerHTML = data.logs.map(l => `<li style="color:${l.includes('ALERT')?'#ff2e63':'#08d9d6'}">${l}</li>`).join('');
+        }
+
+        setInterval(() => { fetchLogs(); updateChart(); }, 5000);
+        loadNotes(); updateChart(); fetchLogs();
+    </script>
+</body>
+</html>
