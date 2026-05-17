@@ -1,3 +1,12 @@
+---
+title: MonaWatch
+emoji: 🌸
+colorFrom: pink
+colorTo: purple
+sdk: docker
+app_port: 7860
+---
+
 # 🌸 MonaWatch: Security & IT Support Suite
 
 MonaWatch adalah asisten IT Support "genius" yang dirancang untuk memantau keamanan jaringan, mengaudit perangkat CCTV/RTSP, melacak aktivitas file secara real-time, dan mengelola inventaris perangkat dalam satu Dashboard yang manis.
