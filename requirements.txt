@@ -1,0 +1,1 @@
+flask\nflask-socketio\nwatchdog\nrequests\nwakeonlan\npsutil\ngunicorn
